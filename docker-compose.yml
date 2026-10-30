@@ -1,0 +1,61 @@
+name: vlaberp
+
+# CasaOS Application Metadata
+x-casaos:
+  architectures:
+    - amd64
+    - arm64
+    - arm
+  main: frontend
+  author: VLab-ERP
+  category: Educational
+  description:
+    en_us: "VLab-ERP: Virtual Lab & Business Simulation Platform for Enterprise Resource Planning (FastAPI + Next.js)."
+  developer: VLab-ERP FEB
+  icon: https://cdn-icons-png.flaticon.com/512/9167/9167018.png
+  index: /
+  port_map: "8280"
+  scheme: http
+  title:
+    en_us: VLab-ERP
+
+services:
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+      network: host
+    image: vlaberp-backend:latest
+    container_name: vlaberp-backend
+    restart: unless-stopped
+    environment:
+      - DATABASE_URL=sqlite:////app/data/vlaberp.db
+      - PYTHONUNBUFFERED=1
+    volumes:
+      - ./data:/app/data
+    ports:
+      - "8281:8281"
+    networks:
+      - vlaberp-net
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+      network: host
+    image: vlaberp-frontend:latest
+    container_name: vlaberp-frontend
+    restart: unless-stopped
+    environment:
+      - BACKEND_URL=http://backend:8281
+      - NODE_ENV=production
+    ports:
+      - "8280:8280"
+    depends_on:
+      - backend
+    networks:
+      - vlaberp-net
+
+networks:
+  vlaberp-net:
+    driver: bridge
